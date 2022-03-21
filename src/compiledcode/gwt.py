@@ -70,27 +70,22 @@ def parse(location):
 
     See also for general JS map parsing: https://github.com/pombredanne/python-sourcemap-1/blob/master/smap.py 
     """
-    if is_symbol_map(location):
-        with open(location, 'rU') as symap_file:
-            for line in symap_file:
-                line = line.strip()
-                if not line:
-                    continue
-                if line.startswith('#'):
-                    # header line
-                    if any(x in line for x in gwt_headers):
-                        pass
-                    else:
-                        # ignore other comment lines
-                        pass
-                    continue
+    if not is_symbol_map(location):
+        return
+    with open(location, 'rU') as symap_file:
+        for line in symap_file:
+            line = line.strip()
+            if not line:
+                continue
+            if line.startswith('#'):
+                continue
 
-                gwts = GwtSymbol(*line.split(','))
-                # remove possible jar:file: prefix
-                clean_path = gwts.sourceUri.replace('jar:file:', '')
-                # remove possible c: or drive name from windows paths. they
-                # are useless
-                clean_path = '/'.join([x for x in clean_path.split('/')
-                                             if ':' not in x])
-                yield (gwts.jsName, gwts.jsniIdent, gwts.className,
-                       gwts.memberName, clean_path, gwts.sourceLine)
+            gwts = GwtSymbol(*line.split(','))
+            # remove possible jar:file: prefix
+            clean_path = gwts.sourceUri.replace('jar:file:', '')
+            # remove possible c: or drive name from windows paths. they
+            # are useless
+            clean_path = '/'.join([x for x in clean_path.split('/')
+                                         if ':' not in x])
+            yield (gwts.jsName, gwts.jsniIdent, gwts.className,
+                   gwts.memberName, clean_path, gwts.sourceLine)

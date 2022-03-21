@@ -81,12 +81,8 @@ def parse(location):
 
                     right = right.strip()
                     right = right.rstrip("\\")
-                    right = right.strip()
-
-                    if right:
-                        for r in right.split():
-                            src_paths.append(r)
-
+                    if right := right.strip():
+                        src_paths.extend(iter(right.split()))
                 else:
                     line = line.strip()
                     line = line.rstrip("\\")
@@ -94,7 +90,5 @@ def parse(location):
                     if line and not line.endswith('.d'):
                         # FIXME: we assume no spaces in filenames: use a make
                         # parser
-                        for p in line.split():
-                            src_paths.append(p)
-
+                        src_paths.extend(iter(line.split()))
     return obj_path, src_paths

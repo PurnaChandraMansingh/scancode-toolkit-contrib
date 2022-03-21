@@ -98,13 +98,12 @@ def get_source_file_path_references(location):
         msg = str(lde)
         errors.append(str)
 
-    seen_file_names = set(file_name(p) for p in unique_paths)
+    seen_file_names = {file_name(p) for p in unique_paths}
     for fn in unique_files:
         if fn not in seen_file_names and fn not in ignores:
             unique_paths.add(fn)
 
     for error in errors:
-        yield 'ERROR: ' + error
+        yield f'ERROR: {error}'
 
-    for path in sorted(unique_paths):
-        yield path
+    yield from sorted(unique_paths)

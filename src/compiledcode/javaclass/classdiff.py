@@ -148,9 +148,8 @@ def compareModifiers(obj0, obj1, opts={}):
             return False
         elif p0 == 'default' and p1 not in ['default', 'public']:
             return False
-    else:
-        if p0 != p1:
-            return False
+    elif p0 != p1:
+        return False
 
     return True
 
@@ -202,10 +201,7 @@ def classdiff(class0, class1, opts={}):
 
 
 def diffFields(class0, class1, opts={}):
-    fields = {}
-    for field in class0.fields:
-        fields[field.name] = field
-
+    fields = {field.name: field for field in class0.fields}
     addedfields = []
     changedfields = []
     fields1 = copy(class1.fields)
@@ -224,7 +220,7 @@ def diffFields(class0, class1, opts={}):
 
         if not compareModifiers(oldfield, newfield, opts):
             # field signature changed
-            changedfields.append('%s => %s' % (str(oldfield), str(newfield)))
+            changedfields.append(f'{str(oldfield)} => {str(newfield)}')
 
         del(fields[newfield.name])
 
@@ -240,8 +236,7 @@ def diffFields(class0, class1, opts={}):
         diff += '  ' + '\n  '.join(map(str, addedfields)) + '\n'
         diff += '\n'
 
-    removed = [str(x) for x in fields.values() if checkAccess(x, opts)]
-    if removed:
+    if removed := [str(x) for x in fields.values() if checkAccess(x, opts)]:
         diff += 'Removed Fields:\n'
         diff += '  ' + '\n  '.join(removed) + '\n'
         diff += '\n'
@@ -252,7 +247,7 @@ def diffFields(class0, class1, opts={}):
 def diffMethods(class0, class1, opts={}):
     meths = {}
     for meth in class0.methods:
-        sig = '%s(%s)' % (meth.name, ', '.join(meth.args))
+        sig = f"{meth.name}({', '.join(meth.args)})"
         meths[sig] = meth
 
     addedmeths = []
@@ -260,7 +255,7 @@ def diffMethods(class0, class1, opts={}):
     meths1 = copy(class1.methods)
 
     for newmeth in meths1:
-        sig = '%s(%s)' % (newmeth.name, ', '.join(newmeth.args))
+        sig = f"{newmeth.name}({', '.join(newmeth.args)})"
         try:
             oldmeth = meths[sig]
         except KeyError:
@@ -270,10 +265,11 @@ def diffMethods(class0, class1, opts={}):
             continue
 
         # make sure return type or modifiers haven't changed
-        if checkAccess(newmeth, opts) or checkAccess(oldmeth, opts):
-            if not compareModifiers(oldmeth, newmeth, opts):
-                s = '%s => %s' % (str(oldmeth), str(newmeth))
-                changedmeths.append(s)
+        if (
+            checkAccess(newmeth, opts) or checkAccess(oldmeth, opts)
+        ) and not compareModifiers(oldmeth, newmeth, opts):
+            s = f'{str(oldmeth)} => {str(newmeth)}'
+            changedmeths.append(s)
 
         # remove from meths so we can use whats left for added list
         del(meths[sig])
@@ -291,8 +287,7 @@ def diffMethods(class0, class1, opts={}):
         diff += '  ' + '\n  '.join(map(str, addedmeths)) + '\n'
         diff += '\n'
 
-    removed = [str(x) for x in meths.values() if checkAccess(x, opts)]
-    if removed:
+    if removed := [str(x) for x in meths.values() if checkAccess(x, opts)]:
         diff += 'Removed Methods:\n'
         diff += '  ' + '\n  '.join(removed) + '\n'
         diff += '\n'

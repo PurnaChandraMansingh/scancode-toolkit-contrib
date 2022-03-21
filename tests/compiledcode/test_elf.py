@@ -156,7 +156,7 @@ class TestElf(FileBasedTesting):
         from commoncode.text import python_safe_name
         from pprint import pformat
         test_loc = self.get_test_loc(test_file)
-        function = python_safe_name('test_elf_symbols_' + test_file)
+        function = python_safe_name(f'test_elf_symbols_{test_file}')
         testf = '''
     def %(function)s(self):
         test_file = self.get_test_loc(%(test_file)r)
@@ -169,19 +169,20 @@ class TestElf(FileBasedTesting):
             for i, v in enumerate(sorted(expected_values)):
                 assert v == sorted(result)[i]''' % locals()
         print(testf)
-        expected_dict = {}
-        expected_dict['files'] = expected[0]
-        expected_dict['standard_files'] = expected[1]
-        expected_dict['local_functions'] = expected[2]
-        expected_dict['local_objects'] = expected[3]
-        expected_dict['global_functions'] = expected[4]
-        expected_dict['global_objects'] = expected[5]
-        expected_dict['external_libs_functions'] = expected[6]
-        expected_dict['external_libs_objects'] = expected[7]
-        expected_dict['standard_functions'] = expected[8]
-        expected_dict['standard_objects'] = expected[9]
+        expected_dict = {
+            'files': expected[0],
+            'standard_files': expected[1],
+            'local_functions': expected[2],
+            'local_objects': expected[3],
+            'global_functions': expected[4],
+            'global_objects': expected[5],
+            'external_libs_functions': expected[6],
+            'external_libs_objects': expected[7],
+            'standard_functions': expected[8],
+            'standard_objects': expected[9],
+        }
 
-        with open(test_loc + '.expected_elf_symbols', 'wb') as out:
+        with open(f'{test_loc}.expected_elf_symbols', 'wb') as out:
             json.dump(expected_dict, out, indent=2)
 
     def run_test_gen(self):

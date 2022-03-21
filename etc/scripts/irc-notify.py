@@ -85,7 +85,7 @@ def appveyor_vars():
     build_url = '{appveyor_url}/project/{account_name}/{project_name}/build/{build_version}'.format(**locals())
     commit_url = 'https://{repo_provider}.com/{repo_name}/commit/{commit}'.format(**locals())
 
-    vars = dict(
+    return dict(
         appveyor_url=appveyor_url,
         account_name=account_name,
         project_name=project_name,
@@ -112,7 +112,6 @@ def appveyor_vars():
         color_green='\x033',
         color_red='\x034',
     )
-    return vars
 
 
 if __name__ == '__main__':
@@ -148,7 +147,7 @@ if __name__ == '__main__':
             time.sleep(5)
             # send notification
             for msg in messages:
-                print('NOTICE #{} :{}'.format(channel, msg))
+                print(f'NOTICE #{channel} :{msg}')
                 irc_sock.send('NOTICE #{} :{}\r\n'.format(channel, msg).encode())
             time.sleep(5)
             sys.exit()

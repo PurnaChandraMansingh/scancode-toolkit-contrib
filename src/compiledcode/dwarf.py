@@ -231,13 +231,10 @@ class DwarfInfo(object):
             if re.match(DCOMP_UNIT_START_RE(), line):
                 break
             line = line.strip()
-            # we have a filename followed by a compilation dir name
-            match = DCMPDIR_FILE_RE().match(line)
-            if match:
+            if match := DCMPDIR_FILE_RE().match(line):
                 self.cu_filename = match.groups()[0]
                 continue
-            match = DCMPDIR_RE().match(line)
-            if match:
+            if match := DCMPDIR_RE().match(line):
                 self.cu_comp_dir = match.groups()[0]
                 self.parse_local_symbols(location)
 
@@ -253,8 +250,7 @@ class DwarfInfo(object):
             if not line or re.match(DCOMP_UNIT_START_RE(), line):
                 return
             line = line.strip()
-            match = DWARF_FILES_RE() .match(line)
-            if match:
+            if match := DWARF_FILES_RE().match(line):
                 filename = match.groups()[0]
                 if posixpath.isabs(filename):
                     self.files.append(filename)

@@ -55,6 +55,7 @@ For example a tree could be looking like this::
             mac.py : mac-only config script
 """
 
+
 from __future__ import print_function
 
 import os
@@ -76,23 +77,20 @@ elif 'darwin' in sys_platform:
     platform_names = ('posix', 'mac',)
 else:
     raise Exception('Unsupported OS/platform %r' % sys_platform)
-    platform_names = tuple()
-
-
 # common file basenames for requirements and scripts
 base = ('base',)
 
 # known full file names with txt extension for requirements
 # base is always last
-requirements = tuple(p + '.txt' for p in platform_names + base)
+requirements = tuple(f'{p}.txt' for p in platform_names + base)
 
 # known full file names with py extensions for scripts
 # base is always last
-python_scripts = tuple(p + '.py' for p in platform_names + base)
+python_scripts = tuple(f'{p}.py' for p in platform_names + base)
 
 # known full file names of shell scripts
 # there is no base for scripts: they cannot work cross OS (cmd vs. sh)
-shell_scripts = tuple(p + '.sh' for p in platform_names)
+shell_scripts = tuple(f'{p}.sh' for p in platform_names)
 if on_win:
     shell_scripts = ('win.bat',)
 
@@ -116,8 +114,7 @@ def find_pycache(root_dir):
             if d == '__pycache__':
                 dir_path = os.path.join(top, d)
                 dir_path = dir_path.replace(root_dir, '', 1)
-                dir_path = dir_path.strip(os.path.sep)
-                yield dir_path
+                yield dir_path.strip(os.path.sep)
 
 
 def clean(root_dir):
@@ -248,7 +245,7 @@ def run_scripts(configs, root_dir, configured_python, quiet=False):
         cmd = ['.']
         if on_win:
             cmd = []
-        cmd = cmd + [os.path.join(root_dir, sh_script)]
+        cmd += [os.path.join(root_dir, sh_script)]
         call(cmd, root_dir)
 
 

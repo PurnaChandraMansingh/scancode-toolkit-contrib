@@ -300,15 +300,10 @@ class BaseBucketHaloHash(BaseHaloHash):
         hash_buckets = defaultdict(list)
         for h in self.hashes:
             hbv = bitarray_from_bytes(h.digest())
-            hi = bit_to_num(hbv[0:self.high])
+            hi = bit_to_num(hbv[:self.high])
             lo = hbv[self.high:]
             hash_buckets[hi].append(lo)
-        buckets = []
-        # TODO: are we off by one on this range?
-        for i in range(self.number_of_buckets):
-            buck = hash_buckets[i]
-            buckets.append(buck or None)
-        return buckets
+        return [hash_buckets[i] or None for i in range(self.number_of_buckets)]
 
 
 class BucketAverageHaloHash(BaseBucketHaloHash):
@@ -476,8 +471,7 @@ class BaseBitMatrixHaloHash(BaseHaloHash):
         transposed = izip(*arrays)
         # we want a zero to substract 1 and a 1 to add 1 to our sum for a given bit column
         normalized = (normalize(column) for column in transposed)
-        summed = imap(sum, normalized)
-        return summed
+        return imap(sum, normalized)
 
 
 def normalize(iterable):

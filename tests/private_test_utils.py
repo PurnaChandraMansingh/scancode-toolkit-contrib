@@ -168,12 +168,11 @@ class FileDrivenTesting(object):
             extension = '.txt'
 
         if extension and not extension.startswith('.'):
-                extension = '.' + extension
+            extension = f'.{extension}'
 
         file_name = file_name + extension
         temp_dir = self.get_temp_dir(dir_name)
-        location = os.path.join(temp_dir, file_name)
-        return location
+        return os.path.join(temp_dir, file_name)
 
     def get_temp_dir(self, sub_dir_path=None):
         """
@@ -324,9 +323,12 @@ def extract_zip(location, target_dir, verbatim=True):
             target = os.path.join(target_dir, name)
             if not os.path.exists(os.path.dirname(target)):
                 os.makedirs(os.path.dirname(target))
-            if not content and target.endswith(os.path.sep):
-                if not os.path.exists(target):
-                    os.makedirs(target)
+            if (
+                not content
+                and target.endswith(os.path.sep)
+                and not os.path.exists(target)
+            ):
+                os.makedirs(target)
             if not os.path.exists(target):
                 with open(target, 'wb') as f:
                     f.write(content)
@@ -358,11 +360,10 @@ def is_same(dir1, dir2):
         or compared.funny_files):
         return False
 
-    for subdir in compared.common_dirs:
-        if not is_same(os.path.join(dir1, subdir),
-                       os.path.join(dir2, subdir)):
-            return False
-    return True
+    return all(
+        is_same(os.path.join(dir1, subdir), os.path.join(dir2, subdir))
+        for subdir in compared.common_dirs
+    )
 
 
 def file_cmp(file1, file2, ignore_line_endings=False):

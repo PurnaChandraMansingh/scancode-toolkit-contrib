@@ -74,7 +74,7 @@ def getJavacVersion(versionNum):
     try:
         return versions[versionNum]
     except KeyError:
-        return '%s?' % (versionNum)
+        return f'{versionNum}?'
 
 
 def _canonicalize(name, package=''):
@@ -85,10 +85,7 @@ def _canonicalize(name, package=''):
     if name.startswith('java.lang.'):
         return name[len('java.lang.'):]
     i = name.rfind('.')
-    if i != -1 and package + '.' == name[:i + 1]:
-        return name[i + 1:]
-    else:
-        return name
+    return name[i + 1:] if i != -1 and f'{package}.' == name[:i + 1] else name
 
 
 def fmtAccessFlags(flags, isClass=0):
@@ -109,12 +106,8 @@ def fmtAccessFlags(flags, isClass=0):
         l.append('native')
     if flags & ACC_STATIC:
         l.append('static')
-    if flags & ACC_SUPER_OR_SYNCHRONIZED:
-        if not isClass:
-            l.append('synchronized')
-        # l.append('super') # what is this?
-        pass
-
+    if flags & ACC_SUPER_OR_SYNCHRONIZED and not isClass:
+        l.append('synchronized')
     # added as part of #711
     if flags & ACC_STRICT:
         l.append('strictfp')
@@ -199,18 +192,17 @@ def _fmtType(desc, pkg=''):
     desc = desc[dim:]
 
     try:
-        return '%s%s' % (types[desc], array)
+        return f'{types[desc]}{array}'
     except KeyError:
         # class
         pass
 
-    if desc.startswith('L'):
-        name = desc[1:]
-        name = name[:-1]  # strip ;
-        name = _canonicalize(name, pkg)
-        return '%s%s' % (name, array)
-    else:
-        raise Exception('UNKNOWN TYPE: ' + desc)
+    if not desc.startswith('L'):
+        raise Exception(f'UNKNOWN TYPE: {desc}')
+    name = desc[1:]
+    name = name[:-1]  # strip ;
+    name = _canonicalize(name, pkg)
+    return f'{name}{array}'
 
 
 class Method:
@@ -264,13 +256,9 @@ class Field:
         self.name = name
         self.desc = desc
         self.attrs = attrs
-        if attrs.has_key('ConstantValue'):
-            self.value = attrs['ConstantValue']
-        else:
-            self.value = None
-        self.fieldsig = ('%s %s %s' %
-              (fmtAccessFlags(access), _fmtType(desc),
-               _canonicalize(self.name, self.klass.package)))
+        self.value = attrs['ConstantValue'] if attrs.has_key('ConstantValue') else None
+        self.fieldsig = f'{fmtAccessFlags(access)} {_fmtType(desc)} {_canonicalize(self.name, self.klass.package)}'
+
         # default access results in leading space
         self.fieldsig = self.fieldsig.strip()
 
@@ -301,7 +289,7 @@ class MethodRef:
         self.args = _parseArgs(desc)
 
     def __repr__(self):
-        return self.desc + ' ' + self._class + '.' + self.name
+        return f'{self.desc} {self._class}.{self.name}'
 
 
 class Class:
@@ -324,9 +312,11 @@ class Class:
             if tag == CONSTANT_Class:
                 self.constants.append([tag, unpack('>H', f.read(2))[0]])
 
-            elif (tag == CONSTANT_Fieldref or
-                 tag == CONSTANT_Methodref or
-                 tag == CONSTANT_InterfaceMethodref):
+            elif tag in [
+                CONSTANT_Fieldref,
+                CONSTANT_Methodref,
+                CONSTANT_InterfaceMethodref,
+            ]:
 
                 self.constants.append([tag] + list(unpack('>HH', f.read(4))))
 
@@ -359,7 +349,7 @@ class Class:
                 s = f.read(length)
                 self.constants.append([tag, s])
             else:
-                raise Exception('UNKNOWN CONST TAG! ' + str(tag) + ' at ' + hex(f.tell()))
+                raise Exception(f'UNKNOWN CONST TAG! {str(tag)} at {hex(f.tell())}')
             i += 1
 
         [self.access] = unpack('>H', f.read(2))
@@ -379,7 +369,7 @@ class Class:
         # interfaces
         [count] = unpack('>H', f.read(2))
         self.interfaces = []
-        for i in range(count):
+        for _ in range(count):
             [index] = unpack('>H', f.read(2))
             index = self.constants[index][1]
             iname = self.constants[index][1]
@@ -390,10 +380,10 @@ class Class:
         access = fmtAccessFlags(self.access, isClass=1)
         name = self.name.replace('/', '.')
         name = _canonicalize(name, self.package)
-        self.classSig = '%s class %s' % (access, name)
+        self.classSig = f'{access} class {name}'
         if self.superClass != 'java/lang/Object':
             s = _canonicalize(self.superClass, self.package)
-            self.classSig += ' extends %s' % (s)
+            self.classSig += f' extends {s}'
         self.classSig = self.classSig.strip()
         if self.interfaces:
             self.classSig += ' implements ' + ', '.join(self.interfaces)
@@ -401,7 +391,7 @@ class Class:
         # fields
         [count] = unpack('>H', f.read(2))
         self.fields = []
-        for i in range(count):
+        for _ in range(count):
             [access, name, desc, acount] = unpack('>HHHH', f.read(8))
             attrs = {}
             for _ in range(acount):
@@ -415,7 +405,7 @@ class Class:
         # methods
         methods = []
         [count] = unpack('>H', f.read(2))
-        for i in range(count):
+        for _ in range(count):
             [access, name, desc, acount] = unpack('>HHHH', f.read(8))
             attrs = {}
             for _ in range(acount):
@@ -447,8 +437,7 @@ class Class:
     def getConst(self, index):
         c = self.constants[index]
         if c[0] == CONSTANT_String:
-            data = self.constants[c[1]][1]
-            return data
+            return self.constants[c[1]][1]
 
         elif c[0] in [CONSTANT_Methodref, CONSTANT_InterfaceMethodref]:
             classi = self.constants[c[1]][1]
@@ -479,7 +468,7 @@ class Class:
             return c[1]
 
         else:
-            raise Exception('UNHANDLED CONST: ' + str([c[0], c[1]]))
+            raise Exception(f'UNHANDLED CONST: {[c[0], c[1]]}')
 
     def __str__(self):
         return self.classSig

@@ -47,8 +47,7 @@ def file_lines_count(location):
 
     with open(location, 'rb') as lines:
         for line in lines:
-            ls = line.strip()
-            if ls:
+            if ls := line.strip():
                 # TODO implement a better comment function
                 if ls.startswith(('/', '#', '@rem', ';', '*',)):
                     comment += 1

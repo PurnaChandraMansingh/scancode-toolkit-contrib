@@ -90,8 +90,7 @@ class Elf(object):
                         list(self.symbols_section.global_functions)]))
 
     def setup_handlers(self):
-        self.readelf_options = set([s.readelf_option
-                                     for s in self.readelf_sections])
+        self.readelf_options = {s.readelf_option for s in self.readelf_sections}
         for s in self.readelf_sections:
             self.handlers[s.start_re] = s
 
@@ -124,11 +123,8 @@ class Elf(object):
         # loop through each line passing control to a handler as needed
         with open(out, 'rb') as elf_lines:
             for line in elf_lines:
-                # get the handler for this line
-                line = line.strip()
-                if line:
-                    handler = self.get_handler(line)
-                    if handler:
+                if line := line.strip():
+                    if handler := self.get_handler(line):
                         handler(self, elf_lines)
 
 
@@ -191,8 +187,7 @@ class ElfDynamicSection(object):
             if not line or re.match(self.end_re, line):
                 break
             line = line.strip()
-            match = DYNAMIC_NEEDED_RE().match(line)
-            if match:
+            if match := DYNAMIC_NEEDED_RE().match(line):
                 name = match.groups()[0]
                 self.needed_libs.add(name)
                 continue
@@ -242,12 +237,7 @@ def demangle_chunk(symbols):
     demangled = set()
     with open(out, 'rb') as names:
         for name in names:
-            # ignore junk injected by the compiler
-            isjunk = False
-            for junk in demangled_junk:
-                if name.startswith(junk):
-                    isjunk = True
-                    break
+            isjunk = any(name.startswith(junk) for junk in demangled_junk)
             if isjunk:
                 continue
             # do not keep params for CPP functions, just the function
@@ -396,8 +386,7 @@ class ElfSymbolsTableSection(object):
             if not line or re.match(self.end_re, line):
                 break
             line = line.strip()
-            match = SYMBOLS_INTERESTING_RE().match(line)
-            if match:
+            if match := SYMBOLS_INTERESTING_RE().match(line):
                 _type = match.groups()[0]
                 scope = match.groups()[1]
                 name = match.groups()[2]
@@ -412,8 +401,7 @@ class ElfSymbolsTableSection(object):
                     else:
                         self.files.add(name)
 
-                if ((_type == 'FUNC' or _type == 'OBJECT')
-                    and not name.startswith("$")):
+                if _type in ['FUNC', 'OBJECT'] and not name.startswith("$"):
                     if sharedlib:
                         self.externals[_type].add((name, sharedlib))
                     elif name in standardfunc or name in standardobj:
@@ -730,8 +718,7 @@ class ElfRelocatablesSection(object):
             if not line or re.match(self.end_re, line):
                 break
             line = line.strip()
-            match = RELOC_RE().match(line)
-            if match:
+            if match := RELOC_RE().match(line):
                 sym = match.groups()[4]
                 self.sym_names.add(sym)
 

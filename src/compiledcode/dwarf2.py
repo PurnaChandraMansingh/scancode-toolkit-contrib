@@ -109,8 +109,7 @@ def parse(location):
             if not line:
                 continue
 
-            withpath = LINE_WITH_SOURCE_PATH()(line)
-            if withpath:
+            if withpath := LINE_WITH_SOURCE_PATH()(line):
                 logger.debug('Processing path line     : %(line)r' % locals())
                 symbol_type = withpath.group('type')
                 symbol = withpath.group('symbol')
@@ -122,8 +121,7 @@ def parse(location):
                     seen.add(entry)
                 continue
 
-            possible_path = POSSIBLE_SOURCE_PATH()(line)
-            if possible_path:
+            if possible_path := POSSIBLE_SOURCE_PATH()(line):
                 logger.debug('Processing path-like line: %(line)r' % locals())
                 symbol_type = possible_path.group('type')
                 symbol = ''
@@ -151,5 +149,4 @@ def get_dwarfs(location):
         rc, out, err = call_nm(location)
         if rc != 0:
             raise Exception(repr(open(err).read()))
-        for res in parse(out):
-            yield res
+        yield from parse(out)
